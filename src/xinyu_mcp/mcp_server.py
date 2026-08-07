@@ -27,6 +27,7 @@ from mcp.types import (
     CallToolResult,
     TextContent,
     Tool,
+    ToolAnnotations,
 )
 
 from .config import load_config, resolve_endpoints
@@ -109,6 +110,48 @@ async def _jsonrpc_call(
 # ---------------------------------------------------------------------------
 
 
+# 写操作工具名前缀 — 用于在后端未提供 annotations 时自动标记
+_WRITE_OPERATION_PREFIXES = (
+    "write", "batchWrite", "update", "delete", "softDelete",
+    "create", "submit", "save", "send", "bind", "unbind",
+    "mark", "consume", "claim", "seed", "clear", "migrate",
+    "forceSummarize", "complete", "persist", "log",
+    "adminCreate", "adminLogin", "adminToken",
+    "auth", "report", "signin", "logout", "pin",
+)
+
+
+def _is_write_operation(tool_name: str) -> bool:
+    """根据工具名判断是否为写操作。"""
+    return tool_name.startswith(_WRITE_OPERATION_PREFIXES)
+
+
+def _build_annotations(
+    tool_name: str,
+    raw_annotations: Optional[Dict[str, Any]] = None,
+) -> ToolAnnotations | None:
+    """构建 ToolAnnotations：优先透传后端 annotations，缺失时根据工具名推断。
+
+    MCP 协议约定:
+      - readOnlyHint=True  → 只读，客户端可自动执行
+      - readOnlyHint=False → 写操作，客户端应要求用户确认
+      - destructiveHint=True → 破坏性操作，客户端应显著提示
+    """
+    if raw_annotations and isinstance(raw_annotations, dict):
+        return ToolAnnotations(**raw_annotations)
+
+    # 后端未提供 annotations 时，为已知写操作自动标记
+    if _is_write_operation(tool_name):
+        return ToolAnnotations(
+            readOnlyHint=False,
+            destructiveHint=True,
+        )
+    else:
+        return ToolAnnotations(
+            readOnlyHint=True,
+        )
+
+
 async def fetch_backend_tools(
     url: str,
     service_name: str,
@@ -133,11 +176,16 @@ async def fetch_backend_tools(
             continue
 
         prefixed_name = _add_env_prefix(name, env)
+
+        # 透传后端 annotations，若后端未提供则根据工具名推断读写属性
+        annotations = _build_annotations(name, t.get("annotations"))
+
         tools.append(
             Tool(
                 name=prefixed_name,
                 description=str(t.get("description", "") or ""),
                 inputSchema=t.get("inputSchema", {}),
+                annotations=annotations,
             )
         )
         routing[prefixed_name] = service_name

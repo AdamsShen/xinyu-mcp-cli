@@ -287,6 +287,7 @@ def list_tools(
                     "service": routing.get(t.name, "unknown"),
                     "environment": env_name,
                     "inputSchema": t.inputSchema,
+                    "annotations": t.annotations.model_dump() if t.annotations else None,
                 })
         typer.echo(json.dumps(tools_data, ensure_ascii=False, indent=2))
     else:
