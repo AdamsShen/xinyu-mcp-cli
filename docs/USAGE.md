@@ -18,10 +18,12 @@ uv tool install xinyu-mcp-cli \
   -i https://<USERNAME>:<PASSWORD>@yulidev-ap-southeast-1.devops.alibabacloudcs.com/packages/api/protocol/pypi/repo-zplnh
 ```
 
-### 方式二：pip
+### 方式二：pip3
+
+不写版本号默认安装最新版：
 
 ```bash
-pip install --trusted-host yulidev-ap-southeast-1.devops.alibabacloudcs.com \
+pip3 install --trusted-host yulidev-ap-southeast-1.devops.alibabacloudcs.com \
   -i https://<USERNAME>:<PASSWORD>@yulidev-ap-southeast-1.devops.alibabacloudcs.com/packages/api/protocol/pypi/repo-zplnh \
   xinyu-mcp-cli
 ```
@@ -29,14 +31,17 @@ pip install --trusted-host yulidev-ap-southeast-1.devops.alibabacloudcs.com \
 指定版本：
 
 ```bash
-pip install --trusted-host yulidev-ap-southeast-1.devops.alibabacloudcs.com \
+pip3 install --trusted-host yulidev-ap-southeast-1.devops.alibabacloudcs.com \
   -i https://<USERNAME>:<PASSWORD>@yulidev-ap-southeast-1.devops.alibabacloudcs.com/packages/api/protocol/pypi/repo-zplnh \
-  xinyu-mcp-cli==0.1.3
+  xinyu-mcp-cli==0.1.4
 ```
+
+> `pip3 install` 不加版本号即安装最新版，无需 `==latest` 语法。
+> 如本地已有旧版本缓存，加 `--upgrade` 可强制更新：`pip3 install --upgrade xinyu-mcp-cli`
 
 ### 免密配置（一次性）
 
-将凭证写入 `~/.pip/pip.conf`，后续安装无需每次输入：
+将凭证写入 `~/.pip/pip.conf`（macOS/Linux 也兼容 `pip3`），后续安装无需每次输入：
 
 ```ini
 [global]
@@ -44,7 +49,7 @@ index-url = https://<USERNAME>:<PASSWORD>@yulidev-ap-southeast-1.devops.alibabac
 trusted-host = yulidev-ap-southeast-1.devops.alibabacloudcs.com
 ```
 
-配置后直接 `pip install xinyu-mcp-cli` 即可。
+配置后直接 `pip3 install xinyu-mcp-cli` 即可。
 
 ## 初始化
 
