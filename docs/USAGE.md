@@ -6,22 +6,45 @@ xinyu-mcp-cli 是心屿后端 MCP 聚合 CLI 工具，将 6 个后端微服务�
 
 ## 安装
 
+### 前置：获取凭证
+
+联系管理员获取云效制品仓库的访问凭证（用户名 + 密码）。
+
 ### 方式一：uv tool（推荐，全局隔离安装）
 
 ```bash
 uv tool install xinyu-mcp-cli \
-  --index-url https://yulidev-ap-southeast-1.devops.alibabacloudcs.com/packages/api/protocol/pypi/repo-zplnh/simple
+  --trusted-host yulidev-ap-southeast-1.devops.alibabacloudcs.com \
+  -i https://<USERNAME>:<PASSWORD>@yulidev-ap-southeast-1.devops.alibabacloudcs.com/packages/api/protocol/pypi/repo-zplnh
 ```
 
 ### 方式二：pip
 
 ```bash
-pip install xinyu-mcp-cli \
-  --index-url https://yulidev-ap-southeast-1.devops.alibabacloudcs.com/packages/api/protocol/pypi/repo-zplnh/simple \
-  --trusted-host yulidev-ap-southeast-1.devops.alibabacloudcs.com
+pip install --trusted-host yulidev-ap-southeast-1.devops.alibabacloudcs.com \
+  -i https://<USERNAME>:<PASSWORD>@yulidev-ap-southeast-1.devops.alibabacloudcs.com/packages/api/protocol/pypi/repo-zplnh \
+  xinyu-mcp-cli
 ```
 
-> 安装后 `xinyu-mcp` 命令全局可用，可通过 `which xinyu-mcp` 验证。
+指定版本：
+
+```bash
+pip install --trusted-host yulidev-ap-southeast-1.devops.alibabacloudcs.com \
+  -i https://<USERNAME>:<PASSWORD>@yulidev-ap-southeast-1.devops.alibabacloudcs.com/packages/api/protocol/pypi/repo-zplnh \
+  xinyu-mcp-cli==0.1.3
+```
+
+### 免密配置（一次性）
+
+将凭证写入 `~/.pip/pip.conf`，后续安装无需每次输入：
+
+```ini
+[global]
+index-url = https://<USERNAME>:<PASSWORD>@yulidev-ap-southeast-1.devops.alibabacloudcs.com/packages/api/protocol/pypi/repo-zplnh
+trusted-host = yulidev-ap-southeast-1.devops.alibabacloudcs.com
+```
+
+配置后直接 `pip install xinyu-mcp-cli` 即可。
 
 ## 初始化
 
@@ -132,7 +155,8 @@ xinyu-mcp unregister --target codex
 ```bash
 # 升级到最新版
 uv tool upgrade xinyu-mcp-cli \
-  --index-url https://yulidev-ap-southeast-1.devops.alibabacloudcs.com/packages/api/protocol/pypi/repo-zplnh/simple
+  --trusted-host yulidev-ap-southeast-1.devops.alibabacloudcs.com \
+  -i https://<USERNAME>:<PASSWORD>@yulidev-ap-southeast-1.devops.alibabacloudcs.com/packages/api/protocol/pypi/repo-zplnh
 
 # 列出已安装版本
 uv tool list | grep xinyu-mcp
