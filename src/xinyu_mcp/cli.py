@@ -1,17 +1,17 @@
 """xinyu-mcp CLI — 心屿后端 MCP 聚合命令行工具。
 
-安装后 Claude Code 即可通过自然语言操作后端服务:
+安装后 Claude Code / Cursor / Codex 即可通过自然语言操作后端服务:
 
     pip install xinyu-mcp-cli
     xinyu-mcp init --endpoint https://xinyu-backend.example.com
-    # 重新打开 Claude Code，即可说:
+    # 重新打开任意工具，即可说:
     #   "查一下用户 10001 有哪些角色"
 
 命令:
-    init        初始化配置并注册到 Claude Code
-    serve       启动 MCP stdio server（由 Claude Code 自动调用）
+    init        初始化配置并注册到 Claude Code / Cursor / Codex
+    serve       启动 MCP stdio server（由各工具自动调用）
     list-tools  列出所有可用工具及其描述
-    unregister  从 Claude Code 中移除注册
+    unregister  从三端工具中移除注册
     status      查看当前配置状态
 """
 
@@ -30,12 +30,13 @@ from .backend_registry import (
     SERVICE_REGISTRY,
 )
 from .config import (
+    TARGETS,
     is_registered,
     load_config,
-    register_to_claude_code,
+    register_to_targets,
     resolve_endpoints,
     save_config,
-    unregister_from_claude_code,
+    unregister_from_targets,
 )
 from .mcp_server import fetch_all_tools, run_server
 
@@ -181,15 +182,20 @@ def init(
         for svc_name, url in endpoints_test.items():
             typer.echo(f"     • {svc_name}: {url}")
 
-    # 注册到 Claude Code
-    newly_registered = register_to_claude_code()
-    if newly_registered:
-        typer.echo("✅ 已注册到 Claude Code (~/.claude/.mcp.json)")
-    else:
-        typer.echo("ℹ️  Claude Code 注册条目已存在，跳过")
+    # 注册到三端工具
+    targets = list(TARGETS.keys())
+    results = register_to_targets(targets)
 
     typer.echo("")
-    typer.echo("🎉 配置完成！重新打开 Claude Code 即可用自然语言操作后端服务。")
+    for t in targets:
+        name, _, _, _ = TARGETS[t]
+        if results.get(t):
+            typer.echo(f"✅ 已注册到 {name}")
+        else:
+            typer.echo(f"ℹ️  {name} 注册条目已存在，跳过")
+
+    typer.echo("")
+    typer.echo("🎉 配置完成！重新打开 Claude Code / Cursor / Codex 即可用自然语言操作后端服务。")
 
 
 # ---------------------------------------------------------------------------
@@ -314,16 +320,27 @@ def list_tools(
 
 
 @_app_typer.command()
-def unregister() -> None:
-    """从 Claude Code 中移除 xinyu MCP server 注册条目。"""
+def unregister(
+    target: Optional[str] = typer.Option(
+        None, "--target", "-t",
+        help="仅从指定工具移除（cc/cursor/codex），默认全部移除",
+    ),
+) -> None:
+    """从 Claude Code / Cursor / Codex 中移除 xinyu MCP server 注册条目。"""
     _setup_logging()
 
-    if not is_registered():
-        typer.echo("ℹ️  xinyu 未注册到 Claude Code，无需移除。")
-        raise typer.Exit(0)
+    targets = [target] if target else list(TARGETS.keys())
+    results = unregister_from_targets(targets)
 
-    unregister_from_claude_code()
-    typer.echo("✅ 已从 Claude Code (~/.claude/.mcp.json) 移除 xinyu 注册。")
+    removed = False
+    for t in targets:
+        name, _, _, _ = TARGETS[t]
+        if results.get(t):
+            typer.echo(f"✅ 已从 {name} 移除 xinyu 注册。")
+            removed = True
+
+    if not removed:
+        typer.echo("ℹ️  xinyu 未注册到任何工具，无需移除。")
 
 
 # ---------------------------------------------------------------------------
@@ -339,10 +356,15 @@ def status() -> None:
     cfg = load_config()
     prod_endpoints = resolve_endpoints(cfg, env="prod")
     test_endpoints = resolve_endpoints(cfg, env="test")
-    registered = is_registered()
 
     typer.echo("── xinyu-mcp 状态 ──")
-    typer.echo(f"  已注册到 Claude Code: {'✅' if registered else '❌'}")
+
+    # 三端注册状态
+    typer.echo("  MCP 注册状态:")
+    for t_key in TARGETS:
+        name, _, _, check_fn = TARGETS[t_key]
+        icon = "✅" if check_fn() else "❌"
+        typer.echo(f"    {icon} {name}")
     if prod_endpoints:
         typer.echo(f"  [生产环境] {len(prod_endpoints)} 个服务")
         for svc_name, url in prod_endpoints.items():
@@ -356,7 +378,9 @@ def status() -> None:
     else:
         typer.echo(f"  [测试环境] 未配置")
     typer.echo(f"  Claude Code 配置: {Path.home() / '.claude' / '.mcp.json'}")
-    typer.echo(f"  xinyu-mcp 配置: {Path.home() / '.xinyu-mcp' / 'config.yaml'}")
+    typer.echo(f"  Cursor 配置:       {Path.home() / '.cursor' / 'mcp.json'}")
+    typer.echo(f"  Codex 配置:        {Path.home() / '.codex' / 'config.toml'}")
+    typer.echo(f"  xinyu-mcp 配置:    {Path.home() / '.xinyu-mcp' / 'config.yaml'}")
 
 
 # ---------------------------------------------------------------------------
