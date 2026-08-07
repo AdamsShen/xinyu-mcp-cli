@@ -18,9 +18,11 @@ _DEFAULT_CONFIG_DIR = Path.home() / ".xinyu-mcp"
 _DEFAULT_CONFIG_PATH = _DEFAULT_CONFIG_DIR / "config.yaml"
 
 # 三端 MCP 配置文件路径
-_CC_MCP_JSON_PATH = Path.home() / ".claude" / ".mcp.json"
+_CLAUDE_JSON_PATH = Path.home() / ".claude.json"
 _CURSOR_MCP_JSON_PATH = Path.home() / ".cursor" / "mcp.json"
 _CODEX_CONFIG_TOML_PATH = Path.home() / ".codex" / "config.toml"
+# 旧版 Claude Code MCP 配置路径（需清理）
+_OLD_CC_MCP_JSON_PATH = Path.home() / ".claude" / ".mcp.json"
 
 # ---------------------------------------------------------------------------
 # 读取 / 写入 config.yaml
@@ -160,12 +162,32 @@ def _is_json_mcp_registered(path: Path) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Claude Code — ~/.claude/.mcp.json
+# Claude Code — ~/.claude.json（根级别 mcpServers）
 # ---------------------------------------------------------------------------
 
-register_to_claude_code = lambda: _register_to_json_mcp(_CC_MCP_JSON_PATH)
-unregister_from_claude_code = lambda: _unregister_from_json_mcp(_CC_MCP_JSON_PATH)
-is_cc_registered = lambda: _is_json_mcp_registered(_CC_MCP_JSON_PATH)
+def _cleanup_old_cc_mcp_json() -> None:
+    """清理旧版 ~/.claude/.mcp.json 中的 xinyu 注册条目。"""
+    if _OLD_CC_MCP_JSON_PATH.exists():
+        _unregister_from_json_mcp(_OLD_CC_MCP_JSON_PATH)
+
+
+def register_to_claude_code() -> bool:
+    """将 xinyu 注册到 ~/.claude.json（根级别 mcpServers）。"""
+    # 先清理旧版配置文件中的条目
+    _cleanup_old_cc_mcp_json()
+    return _register_to_json_mcp(_CLAUDE_JSON_PATH)
+
+
+def unregister_from_claude_code() -> bool:
+    """从 ~/.claude.json 中移除 xinyu 注册。"""
+    result = _unregister_from_json_mcp(_CLAUDE_JSON_PATH)
+    _cleanup_old_cc_mcp_json()
+    return result
+
+
+def is_cc_registered() -> bool:
+    """检查 xinyu 是否已注册到 Claude Code。"""
+    return _is_json_mcp_registered(_CLAUDE_JSON_PATH)
 
 
 # ---------------------------------------------------------------------------

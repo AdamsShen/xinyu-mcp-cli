@@ -377,7 +377,7 @@ def status() -> None:
             typer.echo(f"    • {svc_name}: {url}")
     else:
         typer.echo(f"  [测试环境] 未配置")
-    typer.echo(f"  Claude Code 配置: {Path.home() / '.claude' / '.mcp.json'}")
+    typer.echo(f"  Claude Code 配置: {Path.home() / '.claude.json'}")
     typer.echo(f"  Cursor 配置:       {Path.home() / '.cursor' / 'mcp.json'}")
     typer.echo(f"  Codex 配置:        {Path.home() / '.codex' / 'config.toml'}")
     typer.echo(f"  xinyu-mcp 配置:    {Path.home() / '.xinyu-mcp' / 'config.yaml'}")
