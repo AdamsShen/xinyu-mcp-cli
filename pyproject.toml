@@ -29,8 +29,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://yulidev-ap-southeast-1.devops.alibabacloudcs.com/codeup/yuliyuli"
-Repository = "https://yulidev-ap-southeast-1.devops.alibabacloudcs.com/codeup/yuliyuli.git"
+Homepage = "https://yulidev-ap-southeast-1.devops.alibabacloudcs.com/codeup/xinyu-mcp-cli"
+Repository = "yulidev@yulidev-ap-southeast-1.devops.alibabacloudcs.com:codeup/xinyu-mcp-cli.git"
 
 [project.scripts]
 xinyu-mcp = "xinyu_mcp.cli:app"
